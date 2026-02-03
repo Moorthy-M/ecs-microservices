@@ -1,0 +1,49 @@
+name: Platform Infra CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - infra/platform/**
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  TF_VAR_oidc_arn: ${{ secrets.AWS_OIDC_PROVIDER_ARN }}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_CI_PLATFORM_ROLE }}
+          aws-region: ap-south-1
+
+      - name: Verify AWS Identity
+        run: aws sts get-caller-identity
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: infra/platform
+
+      - name: Terraform Format
+        run: terraform fmt -check -recursive
+        working-directory: infra/platform
+
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: infra/platform
+
+      - name: Terraform Plan
+        run: terraform plan -no-color
+        working-directory: infra/platform
