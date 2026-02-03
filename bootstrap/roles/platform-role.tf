@@ -15,7 +15,6 @@ data "aws_iam_policy_document" "platform_ci_permission" {
     ]
 
     resources = [var.tf_state_bucket_arn, "${var.tf_state_bucket_arn}/ecs-microservices/*"]
-    //resources = [local.tf_state_bucket_platform_arn, "${local.tf_state_bucket_platform_arn}/ecs-microservices/*"]
   }
 
   statement {
@@ -90,15 +89,57 @@ data "aws_iam_policy_document" "platform_cd_permission" {
     ]
 
     resources = [var.tf_state_bucket_arn, "${var.tf_state_bucket_arn}/Network/*"]
-    //resources = [local.tf_state_bucket_platform_arn, "${local.tf_state_bucket_platform_arn}/Network/*"]
   }
+
+  statement {
+    sid    = "CreateALB"
+    effect = "Allow"
+    actions = [
+      "elasticloadbalancing:CreateLoadBalancer",
+    "elasticloadbalancing:DeleteLoadBalancer",
+    "elasticloadbalancing:ModifyLoadBalancerAttributes",
+    "elasticloadbalancing:SetSecurityGroups",
+    "elasticloadbalancing:SetSubnets",
+
+    "elasticloadbalancing:CreateTargetGroup",
+    "elasticloadbalancing:DeleteTargetGroup",
+    "elasticloadbalancing:ModifyTargetGroup",
+    "elasticloadbalancing:ModifyTargetGroupAttributes",
+
+    "elasticloadbalancing:CreateListener",
+    "elasticloadbalancing:DeleteListener",
+    "elasticloadbalancing:ModifyListener",
+
+    "elasticloadbalancing:CreateRule",
+    "elasticloadbalancing:DeleteRule",
+    "elasticloadbalancing:ModifyRule",
+
+    "elasticloadbalancing:Describe*"
+    ]
+
+    resources = ["*"]
+  }
+
+  statement {
+    sid   = "CreateECSCluster"
+    effect = "Allow"
+    actions = [
+    "ecs:CreateCluster",
+    "ecs:DeleteCluster",
+    "ecs:DescribeClusters",
+    "ecs:PutClusterCapacityProviders",
+    "ecs:UpdateClusterSettings",
+    "ecs:ListClusters"
+  ]
+
+  resources = ["*"]
+}
 }
 
 // Create Role for CI
 resource "aws_iam_role" "platform_ci_role" {
   name               = "terraform-ci-ecs-microservices-role"
   assume_role_policy = var.ci_trust
-  //assume_role_policy = data.aws_iam_policy_document.ci_trust.json
 
  /*  lifecycle {
     prevent_destroy = true
@@ -137,7 +178,6 @@ resource "aws_iam_role_policy_attachment" "platform_ci_role_attach" {
 resource "aws_iam_role" "platform_cd_role" {
   name               = "terraform-cd-ecs-microservices-role"
   assume_role_policy = var.cd_trust
-  //assume_role_policy = data.aws_iam_policy_document.cd_trust.json
 
   /* lifecycle {
     prevent_destroy = true
