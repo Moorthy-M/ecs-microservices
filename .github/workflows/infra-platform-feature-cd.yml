@@ -1,7 +1,7 @@
 name: Platform Infra CD
 
 on:
-  pull_request:
+  push:
     branches: [feature]
     paths:
       - infra/platform/**
