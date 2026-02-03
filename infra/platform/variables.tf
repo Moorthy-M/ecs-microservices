@@ -7,7 +7,7 @@ variable "tags" {
   }
 }
 
-// Application Load Balancer
+//************* Application Load Balancer *************
 variable "alb_name" {
   type = string
 }
