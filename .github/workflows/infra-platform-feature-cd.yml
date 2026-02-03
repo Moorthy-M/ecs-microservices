@@ -1,4 +1,4 @@
-name: Platform Infra CD
+name: Feature-Platform Infra CD
 
 on:
   push:

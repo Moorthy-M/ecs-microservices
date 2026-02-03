@@ -1,4 +1,4 @@
-name: Platform Infra CI
+name: Feature-Platform Infra CI
 
 on:
   pull_request:
