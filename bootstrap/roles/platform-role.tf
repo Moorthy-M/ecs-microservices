@@ -29,6 +29,20 @@ data "aws_iam_policy_document" "platform_ci_permission" {
   }
 
   statement {
+    sid    = "NetworkReadAccess"
+    effect = "Allow"
+    actions = [
+      "ec2:DescribeVpcs",
+      "ec2:DescribeSubnets",
+      "ec2:DescribeSecurityGroups",
+      "ec2:DescribeInternetGateways",
+      "ec2:DescribeRouteTables"
+    ]
+
+    resources = ["*"]
+  }
+
+  statement {
     sid    = "ALBReadAccess"
     effect = "Allow"
     actions = [
@@ -37,6 +51,7 @@ data "aws_iam_policy_document" "platform_ci_permission" {
 
     resources = ["*"]
   }
+
   statement {
     sid    = "ECSClusterReadAccess"
     effect = "Allow"
@@ -47,6 +62,7 @@ data "aws_iam_policy_document" "platform_ci_permission" {
 
     resources = ["*"]
   }
+
   statement {
     sid    = "RestrictCreateUpdateDeleteAccess"
     effect = "Deny"
@@ -92,32 +108,75 @@ data "aws_iam_policy_document" "platform_cd_permission" {
   }
 
   statement {
+    sid    = "SecurityGroupAccess"
+    effect = "Allow"
+    actions = [
+      "ec2:CreateSecurityGroup",
+      "ec2:AuthorizeSecurityGroupIngress",
+      "ec2:AuthorizeSecurityGroupEgress",
+      "ec2:RevokeSecurityGroupIngress",
+      "ec2:RevokeSecurityGroupEgress",
+      "ec2:DeleteSecurityGroup",
+      "ec2:CreateTags",
+
+      "ec2:DescribeAccountAttributes",
+      "ec2:DescribeVpcs",
+      "ec2:DescribeSubnets",
+      "ec2:DescribeSecurityGroups",
+      "ec2:DescribeInternetGateways",
+      "ec2:DescribeRouteTables"
+    ]
+
+    resources = ["*"]
+  }
+
+  statement {
     sid    = "CreateALB"
     effect = "Allow"
     actions = [
       "elasticloadbalancing:CreateLoadBalancer",
-    "elasticloadbalancing:DeleteLoadBalancer",
-    "elasticloadbalancing:ModifyLoadBalancerAttributes",
-    "elasticloadbalancing:SetSecurityGroups",
-    "elasticloadbalancing:SetSubnets",
+      "elasticloadbalancing:DeleteLoadBalancer",
+      "elasticloadbalancing:ModifyLoadBalancerAttributes",
 
-    "elasticloadbalancing:CreateTargetGroup",
-    "elasticloadbalancing:DeleteTargetGroup",
-    "elasticloadbalancing:ModifyTargetGroup",
-    "elasticloadbalancing:ModifyTargetGroupAttributes",
-
-    "elasticloadbalancing:CreateListener",
-    "elasticloadbalancing:DeleteListener",
-    "elasticloadbalancing:ModifyListener",
-
-    "elasticloadbalancing:CreateRule",
-    "elasticloadbalancing:DeleteRule",
-    "elasticloadbalancing:ModifyRule",
-
-    "elasticloadbalancing:Describe*"
+      "elasticloadbalancing:SetSecurityGroups",
+      "elasticloadbalancing:SetSubnets",
+  
+      "elasticloadbalancing:CreateTargetGroup",
+      "elasticloadbalancing:DeleteTargetGroup",
+      "elasticloadbalancing:ModifyTargetGroup",
+      "elasticloadbalancing:ModifyTargetGroupAttributes",
+  
+      "elasticloadbalancing:CreateListener",
+      "elasticloadbalancing:DeleteListener",
+      "elasticloadbalancing:ModifyListener",
+  
+      "elasticloadbalancing:CreateRule",
+      "elasticloadbalancing:DeleteRule",
+      "elasticloadbalancing:ModifyRule",
+  
+      "elasticloadbalancing:AddTags",
+      "elasticloadbalancing:RemoveTags",
+      "elasticloadbalancing:ModifyRule",
+  
+      "elasticloadbalancing:Describe*"
     ]
 
     resources = ["*"]
+  }
+
+  //This needs only when first time ALB creation
+  statement {
+    sid    = "ServiceLinkedRoleCreateAccess"
+    effect = "Allow"
+    actions = ["iam:CreateServiceLinkedRole"]
+
+    resources = ["*"]
+
+    condition {
+      test = "StringEquals"
+      variable = "iam:AWSServiceName"
+      values = ["elasticloadbalancing.amazonaws.com"]
+    }
   }
 
   statement {
@@ -129,7 +188,8 @@ data "aws_iam_policy_document" "platform_cd_permission" {
     "ecs:DescribeClusters",
     "ecs:PutClusterCapacityProviders",
     "ecs:UpdateClusterSettings",
-    "ecs:ListClusters"
+    "ecs:ListClusters",
+    "ecs:TagResource"
   ]
 
   resources = ["*"]
