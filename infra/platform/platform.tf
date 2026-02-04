@@ -41,9 +41,9 @@ resource "aws_ecs_cluster" "main" {
   name = "${var.ecs_cluster_name}-ecs-cluster"
 
   depends_on = [module.alb]
-  
+
   tags = merge(var.tags,
-  {
-    Name = "${var.ecs_cluster_name}-ecs-cluster"
+    {
+      Name = "${var.ecs_cluster_name}-ecs-cluster"
   })
 }
