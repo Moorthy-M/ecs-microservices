@@ -1,8 +1,8 @@
-name: Feature-Platform Infra CD
+name: Feature-Infra Platform Infra CICD
 
 on:
   push:
-    branches: [feature]
+    branches: [feature-infra]
     paths:
       - infra/platform/**
 
@@ -34,6 +34,18 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
+        working-directory: infra/platform
+
+      - name: Terraform Format
+        run: terraform fmt -check -recursive
+        working-directory: infra/platform
+
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: infra/platform
+
+      - name: Terraform Plan
+        run: terraform plan -no-color
         working-directory: infra/platform
 
       - name: Terraform Apply

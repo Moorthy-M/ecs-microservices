@@ -9,7 +9,8 @@ variable "tags" {
 
 //************* Application Load Balancer *************
 variable "alb_name" {
-  type = string
+  type    = string
+  default = "main-alb"
 }
 
 variable "alb_internal" {
@@ -78,4 +79,10 @@ variable "health_check_interval" {
 
 variable "health_check_timeout" {
   type = number
+}
+
+//************* ECS Cluster *************
+variable "ecs_cluster_name" {
+  type    = string
+  default = "main-ecs-cluster"
 }

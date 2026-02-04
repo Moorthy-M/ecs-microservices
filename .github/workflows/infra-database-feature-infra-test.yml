@@ -1,4 +1,4 @@
-name: Feature-Database Infra CD
+name: Feature-Infra Database Infra CICD
 
 on:
   push:
@@ -34,6 +34,18 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
+        working-directory: infra/database
+      
+      - name: Terraform Format
+        run: terraform fmt -check -recursive
+        working-directory: infra/database
+
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: infra/database
+
+      - name: Terraform Plan
+        run: terraform plan -no-color
         working-directory: infra/database
 
       - name: Terraform Apply

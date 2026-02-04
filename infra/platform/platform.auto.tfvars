@@ -1,6 +1,6 @@
-// Application Load Balancer
+//************* Application Load Balancer *************
 
-alb_name = "alb-internet-facing"
+alb_name = "internet-facing-alb"
 
 alb_target_port     = "80"
 alb_target_protocol = "HTTP"
@@ -33,3 +33,7 @@ alb_sg_egress_rules = [
     cidr_blocks = ["0.0.0.0/0"]
   }
 ]
+
+//************* ECS Cluster *************
+
+ecs_cluster_name = "main"

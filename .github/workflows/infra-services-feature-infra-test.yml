@@ -35,7 +35,19 @@ jobs:
       - name: Terraform Init
         run: terraform init
         working-directory: infra/services
+      
+            - name: Terraform Format
+        run: terraform fmt -check -recursive
+        working-directory: infra/services
 
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: infra/services
+
+      - name: Terraform Plan
+        run: terraform plan -no-color
+        working-directory: infra/services
+        
       - name: Terraform Apply
         run: terraform apply -auto-approve
         working-directory: infra/services
