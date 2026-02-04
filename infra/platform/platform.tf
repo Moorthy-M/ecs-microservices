@@ -8,7 +8,7 @@ data "terraform_remote_state" "network" {
   }
 }
 
-// Create Application Load Balancer
+//************* Application Load Balancer *************
 module "alb" {
   source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//alb?ref=alb-v1.release"
 

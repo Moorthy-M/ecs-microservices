@@ -1,4 +1,4 @@
-// Application Load Balancer
+//************* Application Load Balancer *************
 
 alb_name = "alb-internet-facing"
 
