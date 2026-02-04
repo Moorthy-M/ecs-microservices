@@ -32,8 +32,18 @@ module "alb" {
   health_check_interval = var.health_check_interval
   health_check_timeout  = var.health_check_timeout
 
+  tags = var.tags
+}
+
+//************* ECS Cluster *************
+
+resource "aws_ecs_cluster" "main" {
+  name = "${var.ecs_cluster_name}-ecs-cluster"
+
+  depends_on = [module.alb]
+  
   tags = merge(var.tags,
-    {
-      Name = "alb-internet-facing"
+  {
+    Name = "${var.ecs_cluster_name}-ecs-cluster"
   })
 }
