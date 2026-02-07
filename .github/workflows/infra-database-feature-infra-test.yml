@@ -2,7 +2,7 @@ name: Feature-Infra Database Infra CICD
 
 on:
   push:
-    branches: [feature]
+    branches: [feature-infra]
     paths:
       - infra/database/**
 

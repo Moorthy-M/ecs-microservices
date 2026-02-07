@@ -1,8 +1,8 @@
-name: Feature-Services Infra CD
+name: Feature-Infra Services Infra CICD
 
 on:
   push:
-    branches: [feature]
+    branches: [feature-infra]
     paths:
       - infra/services/**
 
