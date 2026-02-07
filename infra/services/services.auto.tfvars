@@ -10,7 +10,7 @@ services = {
 
     launch_type   = "fargate"
     desired_count = 2
-    task_role = "ecs-task-role-service1"
+    task_role     = "ecs-task-role-service1"
 
     container = {
       name  = "myapp"
