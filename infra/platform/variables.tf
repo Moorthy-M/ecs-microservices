@@ -4,6 +4,7 @@ variable "tags" {
   default = {
     "Project"     = "ecs-microservices"
     "Environment" = "learning"
+    "InfraAsCode" = "Terraform"
   }
 }
 

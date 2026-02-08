@@ -1,7 +1,3 @@
-locals {
-  tf_state_bucket_platform_arn = "arn:aws:s3:::s3-moorthy-terraform-state"
-}
-
 // Infra CI Permisssions
 data "aws_iam_policy_document" "platform_ci_permission" {
   statement {
@@ -205,11 +201,9 @@ resource "aws_iam_role" "platform_ci_role" {
     prevent_destroy = true
   } */
 
-  tags = {
+  tags = merge(var.tags,{
     Name        = "role-ci-ecs-microservices"
-    Project     = "ecs-microservices"
-    Environment = "production"
-  }
+  })
 }
 
 // Create Permission Policy for CI
@@ -217,11 +211,9 @@ resource "aws_iam_policy" "platform_ci_policy" {
   name   = "terraform-ci-ecs-microservices-permission-policy"
   policy = data.aws_iam_policy_document.platform_ci_permission.json
 
-  tags = {
+  tags =  merge(var.tags,{
     Name        = "policy-ci-ecs-microservices"
-    Project     = "ecs-microservices"
-    Environment = "production"
-  }
+  })
 }
 
 //Attach Permission Policy to Role
@@ -243,11 +235,9 @@ resource "aws_iam_role" "platform_cd_role" {
     prevent_destroy = true
   } */
 
-  tags = {
+  tags = merge(var.tags,{
     Name        = "role-cd-ecs-microservices"
-    Project     = "ecs-microservices"
-    Environment = "production"
-  }
+  })
 }
 
 // Create Permission Policy to Create ALB, ECS Cluster
@@ -259,11 +249,9 @@ resource "aws_iam_policy" "platform_cd_policy" {
     prevent_destroy = true
   } */
 
-  tags = {
+  tags = merge(var.tags,{
     Name        = "policy-cd-ecs-microservices"
-    Project     = "ecs-microservices"
-    Environment = "production"
-  }
+  })
 }
 
 // Attach Permission Policy to Role

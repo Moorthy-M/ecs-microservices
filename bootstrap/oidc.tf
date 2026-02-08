@@ -54,7 +54,8 @@ data "aws_iam_policy_document" "cd_trust" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:Moorthy-M/ecs-microservices:ref:refs/heads/main"]
+      values   = ["repo:Moorthy-M/ecs-microservices:ref:refs/heads/*"]
+      //values   = ["repo:Moorthy-M/ecs-microservices:ref:refs/heads/main"]
     }
   }
 }

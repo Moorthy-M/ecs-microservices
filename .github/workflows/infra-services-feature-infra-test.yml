@@ -1,8 +1,8 @@
-name: Feature-Services Infra CD
+name: Feature-Infra Services Infra CICD
 
 on:
   push:
-    branches: [feature]
+    branches: [feature-infra]
     paths:
       - infra/services/**
 
@@ -36,7 +36,7 @@ jobs:
         run: terraform init
         working-directory: infra/services
       
-            - name: Terraform Format
+      - name: Terraform Format
         run: terraform fmt -check -recursive
         working-directory: infra/services
 
