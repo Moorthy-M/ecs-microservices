@@ -1,10 +1,10 @@
-name: Main-Platform Infra CI
+name: Feature-Services Infra CD
 
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches: [feature]
     paths:
-      - infra/platform/**
+      - infra/services/**
 
 permissions:
   id-token: write
@@ -24,7 +24,7 @@ jobs:
       - name: Configure AWS Credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_CI_PLATFORM_ROLE }}
+          role-to-assume: ${{ secrets.AWS_CD_SERVICES_ROLE }}
           aws-region: ap-south-1
 
       - name: Verify AWS Identity
@@ -34,16 +34,20 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: infra/platform
-
-      - name: Terraform Format
+        working-directory: infra/services
+      
+            - name: Terraform Format
         run: terraform fmt -check -recursive
-        working-directory: infra/platform
+        working-directory: infra/services
 
       - name: Terraform Validate
         run: terraform validate
-        working-directory: infra/platform
+        working-directory: infra/services
 
       - name: Terraform Plan
         run: terraform plan -no-color
-        working-directory: infra/platform
+        working-directory: infra/services
+        
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+        working-directory: infra/services

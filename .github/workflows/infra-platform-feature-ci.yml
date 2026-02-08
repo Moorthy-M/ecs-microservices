@@ -1,8 +1,8 @@
-name: Main-Platform Infra CI
+name: Feature-Platform Infra CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [feature]
     paths:
       - infra/platform/**
 
