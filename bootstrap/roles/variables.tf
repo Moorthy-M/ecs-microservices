@@ -30,4 +30,3 @@ variable "cd_trust" {
   type = string
   description = "OIDC trust policy JSON for CI roles"
 }
-
