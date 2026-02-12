@@ -2,6 +2,10 @@ output "alb_arn" {
   value = module.alb.alb_arn
 }
 
+output "alb_listener_arn" {
+  value = module.alb.alb_listener_arn
+}
+
 output "alb_target_group_arn" {
   value = module.alb.alb_target_group_arn
 }

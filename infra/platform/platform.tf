@@ -10,7 +10,8 @@ data "terraform_remote_state" "network" {
 
 //************* Application Load Balancer *************
 module "alb" {
-  source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//alb?ref=alb-v1.release"
+
+  source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//alb?ref=ecs-v4"
 
   alb_name = var.alb_name
   vpc_id   = data.terraform_remote_state.network.outputs.vpc_id
