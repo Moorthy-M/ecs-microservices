@@ -21,3 +21,7 @@ output "ecs_execution_role_arn" {
 output "ecs_task_role_arns" {
   value = module.iam.ecs_task_role_arns
 }
+
+output "ecs_service_update_role_arn" {
+  value = module.iam.ecs_service_update_role_arn
+}
