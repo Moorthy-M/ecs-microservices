@@ -8,10 +8,16 @@ data "terraform_remote_state" "network" {
   }
 }
 
+data "aws_caller_identity" "account" {}
+
+data "aws_s3_bucket" "log_bucket" {
+  bucket = "bucket-logs-${data.aws_caller_identity.account.account_id}"
+}
+
 //************* Application Load Balancer *************
 module "alb" {
 
-  source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//alb?ref=ecs-v4"
+  source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//alb?ref=v1.release"
 
   alb_name = var.alb_name
   vpc_id   = data.terraform_remote_state.network.outputs.vpc_id
@@ -32,6 +38,8 @@ module "alb" {
   health_check_matcher  = var.health_check_matcher
   health_check_interval = var.health_check_interval
   health_check_timeout  = var.health_check_timeout
+
+  log_bucket = data.aws_s3_bucket.log_bucket.arn
 
   tags = var.tags
 }
