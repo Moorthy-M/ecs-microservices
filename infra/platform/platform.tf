@@ -39,7 +39,7 @@ module "alb" {
   health_check_interval = var.health_check_interval
   health_check_timeout  = var.health_check_timeout
 
-  log_bucket = data.aws_s3_bucket.log_bucket.arn
+  log_bucket = data.aws_s3_bucket.log_bucket.id
 
   tags = var.tags
 }
