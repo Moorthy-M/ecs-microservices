@@ -340,7 +340,7 @@ resource "aws_iam_role_policy_attachment" "service_cd_role_attach" {
 
 // Service Execution Role
 module "ecs_execution_roles" {
-  source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//iam/role?ref=iam-v2"
+  source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//iam/role?ref=v1.release"
   create_role = {
     "ecs-task-execution-role" = {
     trust = {
@@ -357,7 +357,7 @@ module "ecs_execution_roles" {
 
 // Create Policy
 module "task_policies" {
-  source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//iam/policy?ref=iam-v1"
+  source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//iam/policy?ref=v1.release"
   create_policy = {
     "ecs-log-permission-policy" = {
       sid = "AccessForService1"
@@ -378,7 +378,7 @@ module "task_policies" {
 
 // Task Role
 module "task_roles" {
-  source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//iam/role?ref=iam-v2"
+  source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//iam/role?ref=v1.release"
   create_role = {
     "ecs-task-role-frontend" = {
       trust = {

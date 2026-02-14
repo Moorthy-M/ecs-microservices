@@ -266,3 +266,27 @@ resource "aws_iam_role_policy_attachment" "platform_cd_role_attach" {
     prevent_destroy = true
   } */
 }
+
+//************* ALB Log Bucket Policy *************
+data "aws_iam_policy_document" "bucket_policy" {
+
+statement {
+    sid    = "ALBLogBucketAccess"
+    effect = "Allow"
+    actions = [
+      "s3:PutObject"
+    ]
+
+    resources = ["${data.aws_s3_bucket.log_bucket.arn}/AWSLogs/*"]
+
+    principals {
+      type = "Service"
+      identifiers = ["logdelivery.elasticloadbalancing.amazonaws.com"]
+    }
+}
+}
+
+resource "aws_s3_bucket_policy" "bucket_policy" {
+  bucket = data.aws_s3_bucket.log_bucket.id
+  policy = data.aws_iam_policy_document.bucket_policy.json
+}
