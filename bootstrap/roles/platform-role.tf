@@ -25,6 +25,16 @@ data "aws_iam_policy_document" "platform_ci_permission" {
   }
 
   statement {
+    sid    = "LogBucketRead"
+    effect = "Allow"
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [data.aws_s3_bucket.log_bucket.arn]
+  }
+
+  statement {
     sid    = "NetworkReadAccess"
     effect = "Allow"
     actions = [
@@ -101,6 +111,16 @@ data "aws_iam_policy_document" "platform_cd_permission" {
     ]
 
     resources = [var.tf_state_bucket_arn, "${var.tf_state_bucket_arn}/Network/*"]
+  }
+
+  statement {
+    sid    = "LogBucketRead"
+    effect = "Allow"
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [data.aws_s3_bucket.log_bucket.arn]
   }
 
   statement {
@@ -277,7 +297,7 @@ statement {
       "s3:PutObject"
     ]
 
-    resources = ["${data.aws_s3_bucket.log_bucket.arn}/AWSLogs/*"]
+    resources = ["${data.aws_s3_bucket.log_bucket.arn}/alb/AWSLogs/${data.aws_caller_identity.account.account_id}/*"]
 
     principals {
       type = "Service"
