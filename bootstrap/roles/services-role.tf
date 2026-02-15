@@ -105,6 +105,19 @@ data "aws_iam_policy_document" "service_ci_permission" {
 
     resources = ["*"]
   }
+
+  statement {
+    sid    = "ReadCloudWatchLogGroup"
+    effect = "Allow"
+    actions = [ 
+      "logs:DescribeLogGroups",
+      "logs:DescribeLogStreams",
+      "logs:GetLogEvents",
+      "logs:ListTagsForResource"
+     ]
+
+    resources = ["*"]
+  }
 }
 
 // Infra CD Permissions
@@ -263,6 +276,27 @@ data "aws_iam_policy_document" "service_cd_permission" {
     "arn:aws:iam::${data.aws_caller_identity.account.account_id}:role/ecs-task-execution-role",
     "arn:aws:iam::${data.aws_caller_identity.account.account_id}:role/ecs-task-role-*"
     ]
+  }
+
+  statement {
+    sid    = "CreateCloudWatchLogGroup"
+    effect = "Allow"
+    actions = [ 
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:GetLogEvents",
+      "logs:DescribeLogGroups",
+      "logs:DescribeLogStreams",
+      "logs:PutRetentionPolicy",
+      "logs:ListTagsForResource",
+      "logs:TagLogGroup",
+
+      "logs:DeleteLogGroup",
+      "logs:UntagLogGroup"
+     ]
+
+    resources = ["*"]
   }
 }
 
