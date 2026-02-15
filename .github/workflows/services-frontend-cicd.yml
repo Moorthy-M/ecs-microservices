@@ -82,6 +82,6 @@ jobs:
       - name: Update ECS service
         run: |
           aws ecs update-service \
-            --cluster main \
+            --cluster main-ecs-cluster \
             --service frontend
 
