@@ -31,7 +31,8 @@ data "terraform_remote_state" "platform" {
 module "services" {
   for_each = var.services
 
-  source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//ecs?ref=ecs-v4"
+  source = "../../../modules/ecs"
+  //source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//ecs?ref=v1.release"
 
   cluster_id = data.terraform_remote_state.platform.outputs.ecs_cluster_id
 
