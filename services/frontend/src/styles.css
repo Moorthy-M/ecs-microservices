@@ -239,6 +239,12 @@ body {
   color: var(--accent-2);
 }
 
+.catalog-note {
+  margin: 12px 0 18px;
+  color: var(--accent-2);
+  font-weight: 500;
+}
+
 .stats-grid {
   display: grid;
   gap: 16px;
