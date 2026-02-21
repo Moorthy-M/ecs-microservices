@@ -28,36 +28,17 @@ data "terraform_remote_state" "platform" {
   }
 }
 
-resource "aws_security_group" "service" {
-  name   = "service-sg"
-  vpc_id = data.terraform_remote_state.network.outputs.vpc_id
-
-  ingress {
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    security_groups = [data.terraform_remote_state.platform.outputs.alb_sg_id]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(var.tags,
-    {
-      Name = "SG-service-sg"
-  })
-}
-
-module "service1" {
+module "services" {
   for_each = var.services
 
-  source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//ecs?ref=ecs-v3"
+  source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//ecs?ref=v1.0.1"
 
   cluster_id = data.terraform_remote_state.platform.outputs.ecs_cluster_id
+
+  service_name          = each.key
+  service_desired_count = each.value.desired_count
+  service_launch_type   = each.value.launch_type
+
 
   task_definition_family = each.value.family
   task_definition_cpu    = each.value.cpu
@@ -68,15 +49,15 @@ module "service1" {
 
   container = each.value.container
 
-  service_name          = each.key
-  service_desired_count = each.value.desired_count
-  service_launch_type   = each.value.launch_type
+  network = {
+    vpc             = data.terraform_remote_state.network.outputs.vpc_id
+    subnets         = data.terraform_remote_state.network.outputs.private_app_subnets
+    security_groups = [data.terraform_remote_state.platform.outputs.alb_sg_id]
+  }
 
-  service_target_group_arn = data.terraform_remote_state.platform.outputs.alb_target_group_arn
+  alb = merge(each.value.alb, {
+    listener_arn = data.terraform_remote_state.platform.outputs.alb_listener_arn
+  })
 
-  service_subnets         = data.terraform_remote_state.network.outputs.private_app_subnets
-  service_security_groups = [aws_security_group.service.id]
-
-  depends_on = [aws_security_group.service]
-  tags       = var.tags
+  tags = var.tags
 }
