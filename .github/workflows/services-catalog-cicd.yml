@@ -25,10 +25,10 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
-          cache-dependency-path: services/catalog-service/requirements.txt
+          cache-dependency-path: services/catalog-service/requirements-dev.txt
 
       - name: Install Dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements-dev.txt
         working-directory: services/catalog-service
 
       - name: Run Code Check
