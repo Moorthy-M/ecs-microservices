@@ -54,20 +54,26 @@ export default function App() {
   const [stats, setStats] = React.useState(null);
   const [catalogMsg, setCatalogMsg] = React.useState("Showing fallback catalog. Click the button to load live data.");
 
-  /* React.useEffect(() => {
+  React.useEffect(() => {
     Promise.all([fetchCatalog(), fetchCatalogStats()])
       .then(([fetchedItems, fetchedStats]) => {
         setItems(fetchedItems);
         setStats(fetchedStats);
         const isLive = fetchedItems.some((item) => item.id || item.tier);
+        setCatalogMsg(
+          isLive
+            ? "Live catalog loaded from microservice."
+            : "Catalog service returned fallback/default data."
+        );
         setSource(isLive ? "live" : "fallback");
       })
       .catch(() => {
         setItems(defaultItems);
         setStats(null);
         setSource("fallback");
+        setCatalogMsg("Catalog service unavailable. Showing fallback/default data.");
       });
-  }, []); */
+  }, []);
 
   async function loadCatalog() {
   try {
@@ -115,7 +121,7 @@ export default function App() {
           </p>
           <div className="hero__actions">
             <a className="btn primary" href="#login">Try Login</a>
-            <a className="btn ghost" href="#catalog" onClick={loadCatalog}>Load Live Catalog</a>
+            <a className="btn ghost" href="#catalog" onClick={loadCatalog}>Reload Live Catalog</a>
           </div>
         </div>
         <div className="hero__panel">
