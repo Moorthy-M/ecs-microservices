@@ -155,6 +155,21 @@ body {
   gap: 14px;
 }
 
+.auth-switch {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.btn.tab {
+  padding: 8px 16px;
+}
+
+.btn.tab.active {
+  background: rgba(79, 209, 197, 0.2);
+  border-color: rgba(79, 209, 197, 0.7);
+}
+
 .login label {
   display: grid;
   gap: 6px;
@@ -191,6 +206,56 @@ body {
   padding: 20px;
   border-radius: 16px;
   border: 1px solid var(--border);
+}
+
+.profile {
+  display: grid;
+  gap: 12px;
+}
+
+.avatar {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(79, 209, 197, 0.55);
+}
+
+.fallback-avatar {
+  display: grid;
+  place-items: center;
+  background: #1c2a45;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.empty-avatar {
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 1px dashed rgba(159, 176, 201, 0.65);
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.profile-info h4 {
+  margin: 0;
+}
+
+.profile-info p {
+  margin: 2px 0;
+  color: var(--muted);
+}
+
+.profile-info span {
+  color: var(--accent-2);
+  font-size: 0.9rem;
+}
+
+.profile-bio {
+  margin-top: 2px;
+  color: var(--muted);
 }
 
 .side-list {
