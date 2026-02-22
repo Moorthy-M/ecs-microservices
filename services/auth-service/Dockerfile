@@ -12,8 +12,10 @@ FROM node:20-slim
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
-COPY --from=build /app/server.js /server.js
+COPY --from=build /app/server.js ./server.js
+COPY --from=build /app/db.js ./db.js
 
 ENV PORT=8081
+
 EXPOSE 8081
 CMD ["node", "server.js"]
