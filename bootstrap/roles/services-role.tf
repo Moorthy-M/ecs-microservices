@@ -47,6 +47,7 @@ data "aws_iam_policy_document" "service_ci_permission" {
       "ec2:DescribeVpcs",
       "ec2:DescribeSubnets",
       "ec2:DescribeSecurityGroups",
+      "ec2:DescribeSecurityGroupRules",
       "ec2:DescribeInternetGateways",
       "ec2:DescribeRouteTables"
     ]
@@ -118,6 +119,19 @@ data "aws_iam_policy_document" "service_ci_permission" {
 
     resources = ["*"]
   }
+
+  statement {
+    sid    = "ScalingPolicy"
+    effect = "Allow"
+    actions = [ 
+      "application-autoscaling:DescribeScalableTargets",
+      "application-autoscaling:DescribeScalingPolicies",
+      "application-autoscaling:ListTagsForResource",
+      "cloudwatch:DescribeAlarms",
+     ]
+
+    resources = ["*"]
+  }
 }
 
 // Infra CD Permissions
@@ -178,6 +192,7 @@ data "aws_iam_policy_document" "service_cd_permission" {
     effect = "Allow"
     actions = [
       "ec2:CreateSecurityGroup",
+      "ec2:DescribeSecurityGroupRules",
       "ec2:AuthorizeSecurityGroupIngress",
       "ec2:AuthorizeSecurityGroupEgress",
       "ec2:RevokeSecurityGroupIngress",
@@ -263,7 +278,7 @@ data "aws_iam_policy_document" "service_cd_permission" {
     condition {
       test = "StringEquals"
       variable = "iam:AWSServiceName"
-      values = ["ecs.amazonaws.com"]
+      values = ["ecs.amazonaws.com" , "ecs.application-autoscaling.amazonaws.com"]
     }
   }
 
@@ -294,6 +309,28 @@ data "aws_iam_policy_document" "service_cd_permission" {
 
       "logs:DeleteLogGroup",
       "logs:UntagLogGroup"
+     ]
+
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "CreateScalingPolicy"
+    effect = "Allow"
+    actions = [ 
+      "application-autoscaling:RegisterScalableTarget",
+      "application-autoscaling:PutScalingPolicy",
+      "application-autoscaling:DeleteScalingPolicy",
+      "application-autoscaling:DeregisterScalableTarget",
+      "application-autoscaling:DescribeScalableTargets",
+      "application-autoscaling:DescribeScalingPolicies",
+      "application-autoscaling:TagResource",
+      "application-autoscaling:UntagResource",
+      "application-autoscaling:ListTagsForResource",
+
+      "cloudwatch:DescribeAlarms",
+      "cloudwatch:PutMetricAlarm",
+      "cloudwatch:DeleteAlarms"
      ]
 
     resources = ["*"]
@@ -383,6 +420,7 @@ module "ecs_execution_roles" {
     }
 
     managed_policy = ["arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"]
+    permission_policy = [module.task_policies.policies["ecs-secrets-permission-policy"]]
   }
   }
 
@@ -394,7 +432,7 @@ module "task_policies" {
   source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//iam/policy?ref=v1.release"
   create_policy = {
     "ecs-log-permission-policy" = {
-      sid = "AccessForService1"
+      sid = "AccessForService"
       actions = [
         "s3:GetObject",
         "s3:PutObject",
@@ -402,6 +440,18 @@ module "task_policies" {
       ]
 
       resources = [data.aws_s3_bucket.log_bucket.arn, "${data.aws_s3_bucket.log_bucket.arn}/ecs-microservices/*"]
+    }
+
+    "ecs-secrets-permission-policy" = {
+      sid = "SecretAccess"
+      actions = [
+        "secretsmanager:GetSecretValue",
+				"secretsmanager:DescribeSecret",
+				"secretsmanager:ListSecretVersionIds",
+				"secretsmanager:ListSecrets"
+      ]
+
+      resources = ["*"]
     }
   }
 

@@ -83,6 +83,7 @@ variable "health_check_timeout" {
 }
 
 //************* ECS Cluster *************
+
 variable "ecs_cluster_name" {
   type    = string
   default = "main-ecs-cluster"
