@@ -61,7 +61,7 @@ module "services" {
   source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//ecs?ref=v1.0.3"
 
   cluster_name = data.terraform_remote_state.platform.outputs.ecs_cluster_name
-  cluster_id = data.terraform_remote_state.platform.outputs.ecs_cluster_id
+  cluster_id   = data.terraform_remote_state.platform.outputs.ecs_cluster_id
 
   service_name          = each.key
   service_desired_count = each.value.desired_count
