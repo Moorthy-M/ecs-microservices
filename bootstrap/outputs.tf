@@ -14,6 +14,14 @@ output "service_cd_role_arn" {
   value = module.iam.service_cd_role_arn
 }
 
+output "database_ci_role_arn" {
+  value = module.iam.database_ci_role_arn
+}
+
+output "database_cd_role_arn" {
+  value = module.iam.database_cd_role_arn
+}
+
 output "ecs_execution_role_arn" {
   value = module.iam.ecs_execution_role_arn
 }

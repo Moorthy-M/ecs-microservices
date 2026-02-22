@@ -14,6 +14,14 @@ output "service_cd_role_arn" {
     value = aws_iam_role.service_cd_role.arn
 }
 
+output "database_ci_role_arn" {
+    value = aws_iam_role.database_ci_role.arn
+}
+
+output "database_cd_role_arn" {
+    value = aws_iam_role.database_cd_role.arn
+}
+
 output "ecs_execution_role_arn" {
   value = module.ecs_execution_roles.role_name_arns["ecs-task-execution-role"]
 }
