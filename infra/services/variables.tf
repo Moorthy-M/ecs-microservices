@@ -27,9 +27,10 @@ variable "services" {
     })
 
     container = object({
-      name  = string
-      port  = number
-      image = string
+      name    = string
+      port    = number
+      image   = string
+      secrets = optional(bool, false)
     })
   }))
 }

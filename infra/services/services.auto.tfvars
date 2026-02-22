@@ -43,9 +43,10 @@ services = {
     }
 
     container = {
-      name  = "authentication"
-      image = "moorthy265/ecs-microservices:authentication-1.0"
-      port  = 8081
+      name    = "authentication"
+      image   = "moorthy265/ecs-microservices:authentication-1.0"
+      port    = 8081
+      secrets = true
     }
   }
 
