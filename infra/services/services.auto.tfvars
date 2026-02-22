@@ -21,7 +21,7 @@ services = {
 
     container = {
       name  = "frontend"
-      image = "moorthy265/ecs-microservices:frontend-1.0"
+      image = "moorthy265/ecs-microservices:frontend-v1"
       port  = 8080
     }
   }
@@ -44,7 +44,7 @@ services = {
 
     container = {
       name    = "authentication"
-      image   = "moorthy265/ecs-microservices:authentication-1.0"
+      image   = "moorthy265/ecs-microservices:authentication-v1"
       port    = 8081
       secrets = true
     }
@@ -68,7 +68,7 @@ services = {
 
     container = {
       name  = "catalog"
-      image = "moorthy265/ecs-microservices:catalog-1.0"
+      image = "moorthy265/ecs-microservices:catalog-v1"
       port  = 8082
     }
   }
