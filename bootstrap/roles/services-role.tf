@@ -1,4 +1,7 @@
 data "aws_caller_identity" "account" {}
+data "aws_s3_bucket" "log_bucket" {
+  bucket = "bucket-logs-${data.aws_caller_identity.account.account_id}"
+}
 
 // Infra CI Permisssions
 data "aws_iam_policy_document" "service_ci_permission" {
@@ -44,6 +47,7 @@ data "aws_iam_policy_document" "service_ci_permission" {
       "ec2:DescribeVpcs",
       "ec2:DescribeSubnets",
       "ec2:DescribeSecurityGroups",
+      "ec2:DescribeSecurityGroupRules",
       "ec2:DescribeInternetGateways",
       "ec2:DescribeRouteTables"
     ]
@@ -62,17 +66,32 @@ data "aws_iam_policy_document" "service_ci_permission" {
   }
 
   statement {
-    sid    = "ECSClusterReadAccess"
+    sid    = "ECSReadAccess"
     effect = "Allow"
     actions = [
       "ecs:ListClusters",
-      "ecs:DescribeClusters"
+      "ecs:DescribeClusters",
+      "ecs:ListServices",
+      "ecs:DescribeServices",
+      "ecs:DescribeTaskDefinition",
+      "ecs:ListTaskDefinitions",
     ]
 
     resources = ["*"]
   }
 
   statement {
+    sid    = "IAMPassRole"
+    effect = "Allow"
+    actions = [ "iam:PassRole" ]
+
+    resources = [
+    "arn:aws:iam::${data.aws_caller_identity.account.account_id}:role/ecs-task-execution-role",
+    "arn:aws:iam::${data.aws_caller_identity.account.account_id}:role/ecs-task-role-*"
+    ]
+  }
+
+    statement {
     sid    = "RestrictCreateUpdateDeleteAccess"
     effect = "Deny"
     actions = [
@@ -89,14 +108,29 @@ data "aws_iam_policy_document" "service_ci_permission" {
   }
 
   statement {
-    sid    = "IAMPassRole"
+    sid    = "ReadCloudWatchLogGroup"
     effect = "Allow"
-    actions = [ "iam:PassRole" ]
+    actions = [ 
+      "logs:DescribeLogGroups",
+      "logs:DescribeLogStreams",
+      "logs:GetLogEvents",
+      "logs:ListTagsForResource"
+     ]
 
-    resources = [
-    "arn:aws:iam::${data.aws_caller_identity.account.account_id}:role/ecs-task-execution-role",
-    "arn:aws:iam::${data.aws_caller_identity.account.account_id}:role/ecs-task-role-*"
-    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "ScalingPolicy"
+    effect = "Allow"
+    actions = [ 
+      "application-autoscaling:DescribeScalableTargets",
+      "application-autoscaling:DescribeScalingPolicies",
+      "application-autoscaling:ListTagsForResource",
+      "cloudwatch:DescribeAlarms",
+     ]
+
+    resources = ["*"]
   }
 }
 
@@ -154,6 +188,24 @@ data "aws_iam_policy_document" "service_cd_permission" {
   }
 
   statement {
+    sid    = "CreateSecurityGroup"
+    effect = "Allow"
+    actions = [
+      "ec2:CreateSecurityGroup",
+      "ec2:DescribeSecurityGroupRules",
+      "ec2:AuthorizeSecurityGroupIngress",
+      "ec2:AuthorizeSecurityGroupEgress",
+      "ec2:RevokeSecurityGroupIngress",
+      "ec2:RevokeSecurityGroupEgress",
+      "ec2:DeleteSecurityGroup",
+      "ec2:CreateTags",
+      "ec2:DeleteTags"
+    ]
+
+    resources = ["*"]
+  }
+
+  statement {
     sid    = "CreateALBTargetListener"
     effect = "Allow"
     actions = [
@@ -185,8 +237,7 @@ data "aws_iam_policy_document" "service_cd_permission" {
     effect = "Allow"
     actions = [
        "ecs:DescribeClusters",
-       "ecs:ListClusters",
-       "ecs:AddTags"
+       "ecs:ListClusters"
     ]
 
     resources = ["*"]
@@ -199,6 +250,7 @@ data "aws_iam_policy_document" "service_cd_permission" {
       "ecs:CreateService",
       "ecs:UpdateService",
       "ecs:DeleteService",
+      "ecs:ListServices",
       "ecs:DescribeServices",
 
       "ecs:RegisterTaskDefinition",
@@ -206,10 +258,28 @@ data "aws_iam_policy_document" "service_cd_permission" {
       "ecs:DescribeTaskDefinition",
       "ecs:ListTaskDefinitions",
 
-      "ecs:CreateService"
+      "ecs:TagResource",
+      "ecs:UntagResource",
+      "ecs:ListTagsForResource"
     ]
 
     resources = ["*"]
+  }
+
+  statement {
+    sid    = "AllowECSServiceLinkedRole"
+    effect = "Allow"
+    actions = [
+      "iam:CreateServiceLinkedRole"
+    ]
+
+    resources = ["*"]
+
+    condition {
+      test = "StringEquals"
+      variable = "iam:AWSServiceName"
+      values = ["ecs.amazonaws.com" , "ecs.application-autoscaling.amazonaws.com"]
+    }
   }
 
   statement {
@@ -221,6 +291,49 @@ data "aws_iam_policy_document" "service_cd_permission" {
     "arn:aws:iam::${data.aws_caller_identity.account.account_id}:role/ecs-task-execution-role",
     "arn:aws:iam::${data.aws_caller_identity.account.account_id}:role/ecs-task-role-*"
     ]
+  }
+
+  statement {
+    sid    = "CreateCloudWatchLogGroup"
+    effect = "Allow"
+    actions = [ 
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:GetLogEvents",
+      "logs:DescribeLogGroups",
+      "logs:DescribeLogStreams",
+      "logs:PutRetentionPolicy",
+      "logs:ListTagsForResource",
+      "logs:TagLogGroup",
+
+      "logs:DeleteLogGroup",
+      "logs:UntagLogGroup"
+     ]
+
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "CreateScalingPolicy"
+    effect = "Allow"
+    actions = [ 
+      "application-autoscaling:RegisterScalableTarget",
+      "application-autoscaling:PutScalingPolicy",
+      "application-autoscaling:DeleteScalingPolicy",
+      "application-autoscaling:DeregisterScalableTarget",
+      "application-autoscaling:DescribeScalableTargets",
+      "application-autoscaling:DescribeScalingPolicies",
+      "application-autoscaling:TagResource",
+      "application-autoscaling:UntagResource",
+      "application-autoscaling:ListTagsForResource",
+
+      "cloudwatch:DescribeAlarms",
+      "cloudwatch:PutMetricAlarm",
+      "cloudwatch:DeleteAlarms"
+     ]
+
+    resources = ["*"]
   }
 }
 
@@ -241,7 +354,7 @@ resource "aws_iam_role" "service_ci_role" {
 // Create Permission Policy for CI
 resource "aws_iam_policy" "service_ci_policy" {
   name   = "terraform-ci-infra-service-permission-policy"
-  policy = data.aws_iam_policy_document.platform_ci_permission.json
+  policy = data.aws_iam_policy_document.service_ci_permission.json
 
   tags =  merge(var.tags,{
     Name        = "policy-ci-infra-service"
@@ -250,8 +363,8 @@ resource "aws_iam_policy" "service_ci_policy" {
 
 //Attach Permission Policy to Role
 resource "aws_iam_role_policy_attachment" "service_ci_role_attach" {
-  role       = aws_iam_role.platform_ci_role.name
-  policy_arn = aws_iam_policy.platform_ci_policy.arn
+  role       = aws_iam_role.service_ci_role.name
+  policy_arn = aws_iam_policy.service_ci_policy.arn
 
   /* lifecycle {
     prevent_destroy = true
@@ -275,7 +388,7 @@ resource "aws_iam_role" "service_cd_role" {
 // Create Permission Policy to Create ALB, ECS Cluster
 resource "aws_iam_policy" "service_cd_policy" {
   name   = "terraform-cd-infra-service-permission-policy"
-  policy = data.aws_iam_policy_document.platform_cd_permission.json
+  policy = data.aws_iam_policy_document.service_cd_permission.json
 
   /* lifecycle {
     prevent_destroy = true
@@ -288,8 +401,8 @@ resource "aws_iam_policy" "service_cd_policy" {
 
 // Attach Permission Policy to Role
 resource "aws_iam_role_policy_attachment" "service_cd_role_attach" {
-  role       = aws_iam_role.platform_cd_role.name
-  policy_arn = aws_iam_policy.platform_cd_policy.arn
+  role       = aws_iam_role.service_cd_role.name
+  policy_arn = aws_iam_policy.service_cd_policy.arn
 
   /* lifecycle {
     prevent_destroy = true
@@ -298,7 +411,7 @@ resource "aws_iam_role_policy_attachment" "service_cd_role_attach" {
 
 // Service Execution Role
 module "ecs_execution_roles" {
-  source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//iam/role?ref=iam-v2"
+  source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//iam/role?ref=v1.release"
   create_role = {
     "ecs-task-execution-role" = {
     trust = {
@@ -307,6 +420,7 @@ module "ecs_execution_roles" {
     }
 
     managed_policy = ["arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"]
+    permission_policy = [module.task_policies.policies["ecs-secrets-permission-policy"]]
   }
   }
 
@@ -315,36 +429,68 @@ module "ecs_execution_roles" {
 
 // Create Policy
 module "task_policies" {
-  source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//iam/policy?ref=iam-v1"
+  source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//iam/policy?ref=v1.release"
   create_policy = {
-    "service1-permission-policy" = {
-      sid = "AccessForService1"
+    "ecs-log-permission-policy" = {
+      sid = "AccessForService"
       actions = [
         "s3:GetObject",
+        "s3:PutObject",
         "s3:ListBucket"
       ]
 
-      resources = [var.tf_state_bucket_arn, "${var.tf_state_bucket_arn}/ecs-microservices/*"]
+      resources = [data.aws_s3_bucket.log_bucket.arn, "${data.aws_s3_bucket.log_bucket.arn}/ecs-microservices/*"]
+    }
+
+    "ecs-secrets-permission-policy" = {
+      sid = "SecretAccess"
+      actions = [
+        "secretsmanager:GetSecretValue",
+				"secretsmanager:DescribeSecret",
+				"secretsmanager:ListSecretVersionIds",
+				"secretsmanager:ListSecrets"
+      ]
+
+      resources = ["*"]
     }
   }
 
   tags  = var.tags
 }
 
-/** Role name should be like this => {service_name}-role **/
+/** Role name should be like this => ecs-task-role-{service_name} **/
 
 // Task Role
 module "task_roles" {
-  source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//iam/role?ref=iam-v2"
+  source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//iam/role?ref=v1.release"
   create_role = {
-    "service1-role" = {
+    "ecs-task-role-frontend" = {
       trust = {
       type        = "Service"
       identifiers = ["ecs-tasks.amazonaws.com"]
       }
 
-      permission_policy = [module.task_policies.policies["service1-permission-policy"]]
+      permission_policy = [module.task_policies.policies["ecs-log-permission-policy"]]
     }
+
+    "ecs-task-role-authentication" = {
+      trust = {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+      }
+
+      permission_policy = [module.task_policies.policies["ecs-log-permission-policy"]]
+    }
+
+    "ecs-task-role-catalog" = {
+      trust = {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+      }
+
+      permission_policy = [module.task_policies.policies["ecs-log-permission-policy"]]
+    }
+
   }
 
   depends_on = [ module.task_policies ]

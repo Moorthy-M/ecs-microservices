@@ -15,14 +15,22 @@ variable "services" {
     cpu           = number
     memory        = number
     desired_count = number
+    launch_type   = string
 
-    launch_type = string
-    task_role   = string
+    task_role = string
+
+    alb = object({
+      health_path = string
+      route_path  = string
+      protocol    = string
+      priority    = number
+    })
 
     container = object({
-      name  = string
-      port  = number
-      image = string
+      name    = string
+      port    = number
+      image   = string
+      secrets = optional(bool, false)
     })
   }))
 }

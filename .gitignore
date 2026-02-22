@@ -3,3 +3,17 @@
 *.tfstate
 *.tfstate.*
 *.terraform.*
+
+# Node
+**/node_modules/
+npm-debug.log*
+
+# Python
+**/__pycache__/
+**/.pytest_cache/
+*.pyc
+
+# Env/secrets
+**/.env
+**/.env.*
+!**/.env.example

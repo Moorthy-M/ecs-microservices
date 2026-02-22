@@ -1,0 +1,96 @@
+name: Services Catalog CICD
+
+on:
+  push:
+    branches: [feature-infra]
+    paths:
+      - services/catalog-service/**
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  TF_VAR_oidc_arn: ${{ secrets.AWS_OIDC_PROVIDER_ARN }}
+
+jobs:
+  ci-run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: services/catalog-service/requirements-dev.txt
+
+      - name: Install Dependencies
+        run: pip install -r requirements-dev.txt
+        working-directory: services/catalog-service
+
+      - name: Run Code Check
+        run: |
+          pip install ruff
+          ruff check .
+        working-directory: services/catalog-service
+
+      - name: Run Test
+        run: |
+          pip install pytest
+          pytest
+        working-directory: services/catalog-service
+
+      - name: Docker Login
+        run: docker login -u "${{ secrets.DOCKER_USERNAME }}" --password "${{ secrets.DOCKER_PASSWORD }}"
+
+      - name: Docker Build Image
+        run: docker build -t moorthy265/ecs-microservices:catalog-${{ github.sha }} services/catalog-service/.
+
+      - name: Docker Push Image to Docker Hub
+        run: docker push moorthy265/ecs-microservices:catalog-${{ github.sha }}
+  
+  cd-run:
+    runs-on: ubuntu-latest
+    needs: ci-run
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with: 
+          role-to-assume: ${{ secrets.SERVICE_CICD_ROLE }}
+          aws-region: ap-south-1
+
+      - name: Verify AWS Credentials
+        run: aws sts get-caller-identity
+
+      - name: Register new task definition
+        run: |
+          TASK_DEF=$(aws ecs describe-task-definition --task-definition ecs_catalog)
+
+          NEW_TASK_DEF=$(echo $TASK_DEF | jq \
+            --arg IMAGE "moorthy265/ecs-microservices:catalog-${{ github.sha }}" \
+            '.taskDefinition |
+            .containerDefinitions[0].image = $IMAGE |
+            del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)')
+
+          echo $NEW_TASK_DEF > new-task-def.json
+
+          TASK_DEF_ARN=$(aws ecs register-task-definition \
+            --cli-input-json file://new-task-def.json \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+
+          echo "TASK_DEF_ARN=$TASK_DEF_ARN" >> $GITHUB_ENV
+
+      - name: Update ECS service
+        run: |
+          aws ecs update-service \
+            --cluster main-ecs-cluster \
+            --service catalog \
+            --task-definition $TASK_DEF_ARN
+

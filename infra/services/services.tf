@@ -28,36 +28,44 @@ data "terraform_remote_state" "platform" {
   }
 }
 
-resource "aws_security_group" "service" {
-  name   = "service-sg"
-  vpc_id = data.terraform_remote_state.network.outputs.vpc_id
+data "terraform_remote_state" "database" {
+  backend = "s3"
 
-  ingress {
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    security_groups = [data.terraform_remote_state.platform.outputs.alb_sg_id]
+  config = {
+    bucket = "s3-moorthy-terraform-state"
+    key    = "ecs-microservices/database/terraform.tfstate"
+    region = "ap-south-1"
   }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(var.tags,
-    {
-      Name = "SG-service-sg"
-  })
 }
 
-module "service1" {
+locals {
+  default = {
+    host = ""
+    port = -1
+    name = ""
+  }
+}
+
+resource "aws_security_group_rule" "db_ingress" {
+  type                     = "ingress"
+  from_port                = 3306
+  to_port                  = 3306
+  protocol                 = "tcp"
+  security_group_id        = data.terraform_remote_state.database.outputs.security_group
+  source_security_group_id = module.services["authentication"].service_sg_id
+}
+
+module "services" {
   for_each = var.services
 
-  source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//ecs?ref=ecs-v3"
+  source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//ecs?ref=v1.0.3"
 
-  cluster_id = data.terraform_remote_state.platform.outputs.ecs_cluster_id
+  cluster_name = data.terraform_remote_state.platform.outputs.ecs_cluster_name
+  cluster_id   = data.terraform_remote_state.platform.outputs.ecs_cluster_id
+
+  service_name          = each.key
+  service_desired_count = each.value.desired_count
+  service_launch_type   = each.value.launch_type
 
   task_definition_family = each.value.family
   task_definition_cpu    = each.value.cpu
@@ -68,15 +76,22 @@ module "service1" {
 
   container = each.value.container
 
-  service_name          = each.key
-  service_desired_count = each.value.desired_count
-  service_launch_type   = each.value.launch_type
+  db_secrets_arn = each.value.container.secrets ? data.terraform_remote_state.database.outputs.db_secret_arn : ""
+  db_environments = each.value.container.secrets ? {
+    host = split(":", data.terraform_remote_state.database.outputs.rds_endpoint)[0]
+    port = split(":", data.terraform_remote_state.database.outputs.rds_endpoint)[1]
+    name = data.terraform_remote_state.database.outputs.db_name
+  } : local.default
 
-  service_target_group_arn = data.terraform_remote_state.platform.outputs.alb_target_group_arn
+  network = {
+    vpc             = data.terraform_remote_state.network.outputs.vpc_id
+    subnets         = data.terraform_remote_state.network.outputs.private_app_subnets
+    security_groups = [data.terraform_remote_state.platform.outputs.alb_sg_id]
+  }
 
-  service_subnets         = data.terraform_remote_state.network.outputs.private_app_subnets
-  service_security_groups = [aws_security_group.service.id]
+  alb = merge(each.value.alb, {
+    listener_arn = data.terraform_remote_state.platform.outputs.alb_listener_arn
+  })
 
-  depends_on = [aws_security_group.service]
-  tags       = var.tags
+  tags = var.tags
 }

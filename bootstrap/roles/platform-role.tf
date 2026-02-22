@@ -25,6 +25,16 @@ data "aws_iam_policy_document" "platform_ci_permission" {
   }
 
   statement {
+    sid    = "LogBucketRead"
+    effect = "Allow"
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [data.aws_s3_bucket.log_bucket.arn]
+  }
+
+  statement {
     sid    = "NetworkReadAccess"
     effect = "Allow"
     actions = [
@@ -104,6 +114,16 @@ data "aws_iam_policy_document" "platform_cd_permission" {
   }
 
   statement {
+    sid    = "LogBucketRead"
+    effect = "Allow"
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [data.aws_s3_bucket.log_bucket.arn]
+  }
+
+  statement {
     sid    = "SecurityGroupAccess"
     effect = "Allow"
     actions = [
@@ -114,6 +134,7 @@ data "aws_iam_policy_document" "platform_cd_permission" {
       "ec2:RevokeSecurityGroupEgress",
       "ec2:DeleteSecurityGroup",
       "ec2:CreateTags",
+      "ec2:DeleteTags",
 
       "ec2:DescribeAccountAttributes",
       "ec2:DescribeVpcs",
@@ -185,7 +206,9 @@ data "aws_iam_policy_document" "platform_cd_permission" {
     "ecs:PutClusterCapacityProviders",
     "ecs:UpdateClusterSettings",
     "ecs:ListClusters",
-    "ecs:TagResource"
+    "ecs:TagResource",
+    "ecs:UntagResource",
+    "ecs:ListTagsForResource"
   ]
 
   resources = ["*"]
@@ -194,7 +217,7 @@ data "aws_iam_policy_document" "platform_cd_permission" {
 
 // Create Role for CI
 resource "aws_iam_role" "platform_ci_role" {
-  name               = "terraform-ci-ecs-microservices-role"
+  name               = "terraform-ci-infra-platform-role"
   assume_role_policy = var.ci_trust
 
  /*  lifecycle {
@@ -202,17 +225,17 @@ resource "aws_iam_role" "platform_ci_role" {
   } */
 
   tags = merge(var.tags,{
-    Name        = "role-ci-ecs-microservices"
+    Name        = "role-ci-infra-platform"
   })
 }
 
 // Create Permission Policy for CI
 resource "aws_iam_policy" "platform_ci_policy" {
-  name   = "terraform-ci-ecs-microservices-permission-policy"
+  name   = "terraform-ci-infra-platform-permission-policy"
   policy = data.aws_iam_policy_document.platform_ci_permission.json
 
   tags =  merge(var.tags,{
-    Name        = "policy-ci-ecs-microservices"
+    Name        = "policy-ci-infra-platform"
   })
 }
 
@@ -228,7 +251,7 @@ resource "aws_iam_role_policy_attachment" "platform_ci_role_attach" {
 
 // Create Role for CD
 resource "aws_iam_role" "platform_cd_role" {
-  name               = "terraform-cd-ecs-microservices-role"
+  name               = "terraform-cd-infra-platform-role"
   assume_role_policy = var.cd_trust
 
   /* lifecycle {
@@ -236,13 +259,13 @@ resource "aws_iam_role" "platform_cd_role" {
   } */
 
   tags = merge(var.tags,{
-    Name        = "role-cd-ecs-microservices"
+    Name        = "role-cd-infra-platform"
   })
 }
 
 // Create Permission Policy to Create ALB, ECS Cluster
 resource "aws_iam_policy" "platform_cd_policy" {
-  name   = "terraform-cd-ecs-microservices-permission-policy"
+  name   = "terraform-cd-infra-platform-permission-policy"
   policy = data.aws_iam_policy_document.platform_cd_permission.json
 
   /* lifecycle {
@@ -250,7 +273,7 @@ resource "aws_iam_policy" "platform_cd_policy" {
   } */
 
   tags = merge(var.tags,{
-    Name        = "policy-cd-ecs-microservices"
+    Name        = "policy-cd-infra-platform"
   })
 }
 
@@ -262,4 +285,28 @@ resource "aws_iam_role_policy_attachment" "platform_cd_role_attach" {
   /* lifecycle {
     prevent_destroy = true
   } */
+}
+
+//************* ALB Log Bucket Policy *************
+data "aws_iam_policy_document" "bucket_policy" {
+
+statement {
+    sid    = "ALBLogBucketAccess"
+    effect = "Allow"
+    actions = [
+      "s3:PutObject"
+    ]
+
+    resources = ["${data.aws_s3_bucket.log_bucket.arn}/alb/AWSLogs/${data.aws_caller_identity.account.account_id}/*"]
+
+    principals {
+      type = "Service"
+      identifiers = ["logdelivery.elasticloadbalancing.amazonaws.com"]
+    }
+}
+}
+
+resource "aws_s3_bucket_policy" "bucket_policy" {
+  bucket = data.aws_s3_bucket.log_bucket.id
+  policy = data.aws_iam_policy_document.bucket_policy.json
 }
