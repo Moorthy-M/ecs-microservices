@@ -8,6 +8,7 @@ data "terraform_remote_state" "network" {
   }
 }
 
+// Create SQL Database
 module "main_db" {
 
   source = "git::https://github.com/Moorthy-M/Terraform-Modules.git//database?ref=v1.0.2"
